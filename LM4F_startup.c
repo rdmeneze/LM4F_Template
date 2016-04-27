@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012, Mauro Scomparin
+* Copyright (c) 2012, Rafael Dias
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -9,14 +9,14 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * Neither the name of Mauro Scomparin nor the
+*     * Neither the name of Rafael Dias nor the
 *       names of its contributors may be used to endorse or promote products
 *       derived from this software without specific prior written permission.
 *
-* THIS SOFTWARE IS PROVIDED BY Mauro Scomparin ``AS IS'' AND ANY
+* THIS SOFTWARE IS PROVIDED BY Rafael Dias ``AS IS'' AND ANY
 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL Mauro Scomparin BE LIABLE FOR ANY
+* DISCLAIMED. IN NO EVENT SHALL Rafael Dias BE LIABLE FOR ANY
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,10 +25,13 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * File:			LM4F_startup.c.
-* Author:		Mauro Scomparin <http://scompoprojects.worpress.com>.
+* Author:		Rafael Dias <rdmeneze@gmail.com>.
 * Version:		1.0.0.
 * Description:	LM4F120H5QR startup code.
 */
+
+#include "inc/hw_nvic.h"
+#include "inc/hw_types.h"
 
 //-----------------------------------------------------------------------------
 // 							 Functions declarations
@@ -64,13 +67,13 @@ extern unsigned long _end_bss;
 
 // NVIC ISR table
 // the funny looking void(* myvectors[])(void) basically it's a way to make cc accept an array of function pointers.
-__attribute__ ((section(".nvic_table")))
-void(* myvectors[])(void) = {
+__attribute__ ((section(".isr_vector")))
+void(* g_pfnVectors[])(void) = {
 	// This are the fixed priority interrupts and the stack pointer loaded at startup at R13 (SP).
 	//												VECTOR N (Check Datasheet)
 	// here the compiler it's boring.. have to figure that out
-    (void (*)) &_stack_top, 
-    						// stack pointer should be 
+    (void (*)) &_stack_top,
+    						// stack pointer should be
 							// placed here at startup.			0
     rst_handler,			// code entry point					1
     nmi_handler,			// NMI handler.						2
@@ -234,38 +237,52 @@ void(* myvectors[])(void) = {
 // 							Function implementations.
 //-----------------------------------------------------------------------------
 
-/* 
+/*
 * System on reset code. NVIC 1
 * Here I prepare the memory for the c compiler.
 * The stack pointer should be set at the beginning with the NVIC table already.
 * Copy the .data segment from flash into ram.
-* 0 to the .bss segment 
+* 0 to the .bss segment
 */
-	
-void rst_handler(void){	
+
+void rst_handler(void){
 	// Copy the .data section pointers to ram from flash.
 	// Look at LD manual (Optional Section Attributes).
-	
+
 	// source and destination pointers
 	unsigned long *src;
 	unsigned long *dest;
-	
+
 	//this should be good!
 	src = &_end_text;
 	dest = &_start_data;
-	
+
 	//this too
     while(dest < &_end_data)
     {
         *dest++ = *src++;
     }
-	
+
     // now set the .bss segment to 0!
     dest = &_start_bss;
 	while(dest < &_end_bss){
 		*dest++ = 0;
 	}
-	
+
+    //
+    // Enable the floating-point unit.  This must be done here to handle the
+    // case where main() uses floating-point and the function prologue saves
+    // floating-point registers (which will fault if floating-point is not
+    // enabled).  Any configuration of the floating-point unit using DriverLib
+    // APIs must be done here prior to the floating-point unit being enabled.
+    //
+    // Note that this does not use DriverLib since it might not be included in
+    // this project.
+    //
+    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
+                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
+                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
+
 	// after setting copying .data to ram and "zero-ing" .bss we are good
 	// to start the main() method!
 	// There you go!

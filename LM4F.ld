@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012, Mauro Scomparin
+* Copyright (c) 2016, Rafael Dias
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -9,14 +9,14 @@
 *     * Redistributions in binary form must reproduce the above copyright
 *       notice, this list of conditions and the following disclaimer in the
 *       documentation and/or other materials provided with the distribution.
-*     * Neither the name of Mauro Scomparin nor the
+*     * Neither the name of Rafael Dias nor the
 *       names of its contributors may be used to endorse or promote products
 *       derived from this software without specific prior written permission.
 *
-* THIS SOFTWARE IS PROVIDED BY Mauro Scomparin ``AS IS'' AND ANY
+* THIS SOFTWARE IS PROVIDED BY Rafael Dias ``AS IS'' AND ANY
 * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL Mauro Scomparin BE LIABLE FOR ANY
+* DISCLAIMED. IN NO EVENT SHALL Rafael Dias BE LIABLE FOR ANY
 * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
@@ -25,7 +25,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * File:			LM4F.ld.
-* Author:		Mauro Scomparin <http://scompoprojects.worpress.com>.
+* Author:		Rafael Dias <rdmeneze@gmail.com>.
 * Version:		1.0.0.
 * Description:	Linker description file for LM4FXXX microcontrollers.
 */
@@ -60,7 +60,7 @@ SECTIONS
     .text : 
     {
     	/*_start_text = .;	/* This is an index to the beginning of .text segment. */
-    	KEEP(*(.nvic_table)) /* I should keep the NVIC ISR Table because it's needed by the processor to start. */
+    	KEEP(*(.isr_vector)) /* I should keep the NVIC ISR Table because it's needed by the processor to start. */
         *(.text.*)			/* This contains the code after the ISR table. */
         *(.rodata.*)    	/* Read only data.  */
         _end_text = .;		/* This is an index to the end of .text segment. */
